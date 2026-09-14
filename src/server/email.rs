@@ -1,6 +1,6 @@
-use lettre::message::header::ContentType;
+use lettre::message::{header::ContentType, Message, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
-use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
+use lettre::{AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
 
 use super::config::{SmtpConfig, SmtpSecurity};
 
@@ -19,20 +19,40 @@ pub async fn send_verification_email(
     );
 
     let html_body = format!(
-        "<p>Salut {first_names},</p>\
-         <p>Merci de ton inscription à l'ATACC ! Pour confirmer ton adresse email, clique sur le lien ci-dessous :</p>\
-         <p><a href=\"{verify_link}\">Confirmer mon inscription</a></p>\
-         <br>\
-         <p>Si tu n'es pas à l'origine de cette inscription, tu peux ignorer ce message.</p>\
-         <p>À bientôt,<br>L'équipe ATACC</p>"
-    );
+    "<p>Salut {first_names},</p>\
+     <p>Merci de ton inscription à l'ATACC ! Pour confirmer ton adresse email, clique sur le lien ci-dessous :</p>\
+     <p><a href=\"{verify_link}\">Confirmer mon inscription</a></p>\
+     <br>\
+     <p>Si tu n'es pas à l'origine de cette inscription, tu peux ignorer ce message.</p>\
+     <p>À bientôt,<br>L'équipe ATACC</p>"
+);
+
+    let text_body = format!(
+    "Salut {first_names},\n\n\
+     Merci de ton inscription à l'ATACC ! Pour confirmer ton adresse email, copie et colle ce lien dans ton navigateur :\n\n\
+     {verify_link}\n\n\
+     Si tu n'es pas à l'origine de cette inscription, tu peux ignorer ce message.\n\n\
+     À bientôt,\n\
+     L'équipe ATACC"
+);
 
     let email = Message::builder()
         .from(smtp.from_address.parse()?)
         .to(to_email.parse()?)
         .subject("Confirme ton inscription à l'ATACC")
-        .header(ContentType::TEXT_HTML)
-        .body(html_body)?;
+        .multipart(
+            MultiPart::alternative()
+                .singlepart(
+                    SinglePart::builder()
+                        .header(ContentType::TEXT_PLAIN)
+                        .body(text_body),
+                )
+                .singlepart(
+                    SinglePart::builder()
+                        .header(ContentType::TEXT_HTML)
+                        .body(html_body),
+                ),
+        )?;
 
     let builder = match smtp.security {
         SmtpSecurity::None => {
