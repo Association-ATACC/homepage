@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use leptos_meta::{provide_meta_context, Meta, MetaTags, Stylesheet, Title};
+use leptos_meta::{provide_meta_context, Link, Meta, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
@@ -36,6 +36,10 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/atacc-homepage.css"/>
         <Title text="ATACC — Inscription"/>
         <Meta name="description" content="Inscris-toi à l'ATACC, l'association de tutorat et d'aide entre étudiants."/>
+
+        <Link rel="icon" type_="image/x-icon" href="/atacc_logo.ico"/>
+        <Link rel="icon" type_="image/png" href="/atacc_logo.png"/>
+        <Link rel="icon" type_="image/svg+xml" href="/atacc_logo.svg"/>
 
         <Router>
             <main>
