@@ -31,82 +31,58 @@
       );
     in
     {
-      packages = eachSystem (system:
+      packages = eachSystem (
+        system:
         let
           pkgs = pkgsFor.${system};
-          
+
           rustToolchain = pkgs.rust-bin.stable.latest.default.override {
             targets = [ "wasm32-unknown-unknown" ];
           };
-          
+
           rustPlatform = pkgs.makeRustPlatform {
             cargo = rustToolchain;
             rustc = rustToolchain;
           };
-        in {
-          default = rustPlatform.buildRustPackage rec {
-            pname = "atacc-homepage";
-            version = "0.1.0";
-            src = ./.;
+        in
+        {
+          default = self.packages.${system}.kag;
 
-            cargoLock = {
-              lockFile = ./Cargo.lock;
-            };
+          kag = pkgsFor.${system}.callPackage ./nix/package.nix {
+            inherit rustPlatform;
 
-            nativeBuildInputs = with pkgs; [
-              pkg-config
-              cargo-leptos
-              binaryen
-              wasm-bindgen-cli_0_2_127
-              lld
-            ];
-
-            buildInputs = with pkgs; [
-              sqlite
-              openssl
-            ];
-
-            buildPhase = ''
-              runHook preBuild
-              cargo leptos build
-              runHook postBuild
-            '';
-
-            installPhase = ''
-              runHook preInstall
-              
-              mkdir -p $out/bin $out/share/${pname}
-              
-              cp target/debug/${pname} $out/bin/
-              cp -r target/site $out/share/${pname}/
-              
-              runHook postInstall
-            '';
-
-            doCheck = false; 
+            version = self.rev or self.dirtyRev or "dirty";
           };
         }
       );
 
-      devShells = eachSystem (system: 
+      nixosModules = {
+        default = self.nixosModules.atacc-homepage;
+        atacc-homepage = import ./nix/nixos-module.nix self;
+      };
+
+      devShells = eachSystem (
+        system:
         let
           pkgs = pkgsFor.${system};
           rustToolchain = pkgs.rust-bin.stable.latest.default.override {
             targets = [ "wasm32-unknown-unknown" ];
           };
-        in {
-        default = pkgs.mkShell {
-          inputsFrom = [ self.packages.${system}.default ];
+        in
+        {
+          default = pkgs.mkShell {
+            inputsFrom = [ self.packages.${system}.default ];
 
-          env = {
-            RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+            env = {
+              RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+            };
+
+            nativeBuildInputs = with pkgs; [
+              rustToolchain
+              rust-analyzer
+            ];
           };
-
-          nativeBuildInputs = with pkgs; [
-            rustToolchain
-            rust-analyzer
-          ];
-        };
-      });
+        }
+      );
     };
 }
