@@ -39,6 +39,7 @@ lettre = { version = "0.11", default-features = false, features = [
 
 uuid = { version = "1", features = ["v4"], optional = true }
 chrono = { version = "0.4", optional = true }
+regex = "1"
 
 [features]
 hydrate = [

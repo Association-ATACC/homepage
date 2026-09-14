@@ -23,16 +23,28 @@ pub async fn register_user(
     phone: Option<String>,
     student_number: Option<String>,
 ) -> Result<RegistrationOutcome, ServerFnError> {
+    use regex::Regex;
+    use std::sync::LazyLock;
+
     use crate::server::db;
     use crate::server::email::send_verification_email;
     use crate::state::AppState;
 
     let state = expect_context::<AppState>();
 
+    static EMAIL_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap());
+
+    static STUDENT_NUM_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\d{8}$").unwrap());
+
+    static LOCAL_PHONE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^0\d{9}$").unwrap());
+
+    static INTL_PHONE_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"^\+\d{9,15}$").unwrap());
+
     let first_names = first_names.trim().to_string();
     let last_names = last_names.trim().to_string();
     let email = email.trim().to_lowercase();
-    let phone = phone.map(|p| p.trim().to_string()).filter(|p| !p.is_empty());
     let student_number = student_number
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty());
@@ -42,11 +54,40 @@ pub async fn register_user(
             "Merci de renseigner ton prénom et ton nom.",
         ));
     }
-    if !email.contains('@') || !email.contains('.') {
+
+    if !EMAIL_REGEX.is_match(&email) {
         return Err(ServerFnError::new(
             "Cette adresse email ne semble pas valide.",
         ));
     }
+
+    if let Some(ref num) = student_number {
+        if !STUDENT_NUM_REGEX.is_match(num) {
+            return Err(ServerFnError::new(
+                "Le numéro étudiant doit comporter exactement 8 chiffres.",
+            ));
+        }
+    }
+
+    let phone = match phone
+        .map(|p| p.replace([' ', '.', '-'], "").trim().to_string())
+        .filter(|p| !p.is_empty())
+    {
+        Some(p) if LOCAL_PHONE_REGEX.is_match(&p) => {
+            // Drop the leading '0' and prepend '+33'
+            Some(format!("+33{}", &p[1..]))
+        }
+        Some(p) if INTL_PHONE_REGEX.is_match(&p) => {
+            // Keep the +XX international number as is
+            Some(p)
+        }
+        Some(_) => {
+            return Err(ServerFnError::new(
+                "Le format du numéro de téléphone est invalide (attendu: 06... ou +33...).",
+            ));
+        }
+        None => None,
+    };
 
     let pending = db::upsert_pending_registration(
         &state.pool,

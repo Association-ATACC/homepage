@@ -114,7 +114,10 @@ struct TokenRow {
 }
 
 /// Marks the user owning `token` as verified, if not already.
-pub async fn verify_token(pool: &SqlitePool, token: &str) -> Result<VerificationResult, sqlx::Error> {
+pub async fn verify_token(
+    pool: &SqlitePool,
+    token: &str,
+) -> Result<VerificationResult, sqlx::Error> {
     let row: Option<TokenRow> =
         sqlx::query_as("SELECT id, first_names, verified FROM users WHERE verification_token = ?1")
             .bind(token)

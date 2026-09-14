@@ -84,6 +84,7 @@ dependencies = [
  "leptos_meta",
  "leptos_router",
  "lettre",
+ "regex",
  "serde",
  "sqlx",
  "tokio",
