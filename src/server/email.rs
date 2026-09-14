@@ -12,7 +12,11 @@ pub async fn send_verification_email(
     first_names: &str,
     token: &str,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let verify_link = format!("{}/verify?token={}", public_url.trim_end_matches('/'), token);
+    let verify_link = format!(
+        "{}/verify?token={}",
+        public_url.trim_end_matches('/'),
+        token
+    );
 
     let body = format!(
         "Salut {first_names},\n\n\
@@ -38,7 +42,7 @@ pub async fn send_verification_email(
             .credentials(creds)
             .build()
     } else {
-        AsyncSmtpTransport::<Tokio1Executor>::relay(&smtp.host)?
+        AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&smtp.host)
             .port(smtp.port)
             .credentials(creds)
             .build()
