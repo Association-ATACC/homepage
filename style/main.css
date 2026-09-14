@@ -1,0 +1,306 @@
+/* ============================================================
+   ATACC — design tokens
+   Direction : carnet / fichier de bibliothèque. Fond légèrement
+   vert-de-gris, encre profonde, accent ocre "tampon de date de
+   retour", fiches couleur papier pour les blocs de contenu.
+   ============================================================ */
+
+:root {
+  --color-page: oklch(100% 0 0);
+  --color-card: oklch(100% 0 0);
+  --color-ink: oklch(14.5% 0 0);
+  --color-ink-soft: oklch(55.6% 0 0);
+  --color-forest: oklch(63% 0.2 37);
+  --color-forest-dark: oklch(53% 0.2 37);
+  --color-accent: oklch(63% 0.2 37);
+  --color-line: oklch(92.2% 0 0);
+  --color-error: oklch(57.7% 0.245 27.325);
+  --color-error-bg: oklch(57.7% 0.245 27.325 / 10%);
+  --color-success-bg: oklch(94% 0.05 145);
+  --color-success-text: oklch(45% 0.1 145);
+
+  --font-sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+
+  --content-width: 62rem;
+  --radius: 3px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  display: block;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--color-ink);
+  line-height: 1.15;
+}
+
+h1 {
+  font-size: 2.15rem;
+  margin: 0 0 0.6rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+  margin: 0 0 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--color-line);
+}
+
+h3 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+a {
+  color: var(--color-forest-dark);
+}
+
+a:hover {
+  color: var(--color-accent);
+}
+
+em {
+  font-style: italic;
+  color: var(--color-ink-soft);
+}
+
+/* ---------- Header ---------- */
+
+.site-header {
+  padding: 1.5rem 0 2.5rem;
+}
+
+.site-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.75rem;
+}
+
+.site-logo {
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+
+.site-name {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
+.hero p {
+  max-width: 34rem;
+  color: var(--color-ink-soft);
+}
+
+#biblio {
+  margin-left: auto;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  text-decoration: none
+}
+
+/* ---------- Registration form ---------- */
+
+.registration {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  padding: 1.75rem 1.75rem 2rem;
+  margin-bottom: 2.5rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+}
+
+.field > span {
+  color: var(--color-ink-soft);
+}
+
+.field input {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--color-ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-line);
+  padding: 0.4rem 0.1rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.field input:focus-visible {
+  border-bottom-color: var(--color-forest);
+  outline: 2px solid var(--color-forest);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+button[type="submit"] {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #fdfcf8;
+  background: var(--color-forest);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.7rem 1.4rem;
+  margin-top: 0.3rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  background: var(--color-forest-dark);
+}
+
+button[type="submit"]:disabled {
+  background: var(--color-ink-soft);
+  cursor: progress;
+}
+
+button[type="submit"]:focus-visible {
+  outline: 2px solid var(--color-forest-dark);
+  outline-offset: 2px;
+}
+
+.form-message {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: 0.92rem;
+}
+
+.form-message-success {
+  background: var(--color-success-bg);
+  color: var(--color-forest-dark);
+}
+
+.form-message-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+/* ---------- Weekly schedule ---------- */
+
+.schedule-empty {
+  color: var(--color-ink-soft);
+  font-style: italic;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.75rem;
+}
+
+.schedule-day {
+  border-top: 2px solid var(--color-accent);
+  padding-top: 0.6rem;
+}
+
+.schedule-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.schedule-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.85rem;
+}
+
+.schedule-time {
+  color: var(--color-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule-subject {
+  color: var(--color-ink);
+}
+
+/* ---------- Verification landing page (plain HTML, no hydration) ---------- */
+
+.verify-page {
+  max-width: var(--content-width);
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 640px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-day {
+    border-top: none;
+    border-left: 2px solid var(--color-accent);
+    padding-top: 0;
+    padding-left: 0.75rem;
+  }
+}
+
+/* ---------- Reduced motion / accessibility ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

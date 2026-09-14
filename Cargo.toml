@@ -1,0 +1,84 @@
+[package]
+name = "atacc-inscription"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+leptos = { version = "0.8" }
+leptos_router = { version = "0.8" }
+leptos_meta = { version = "0.8" }
+
+axum = { version = "0.8", features = ["macros"], optional = true }
+leptos_axum = { version = "0.8", optional = true }
+tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
+wasm-bindgen = { version = "=0.2.127", optional = true }
+
+serde = { version = "1", features = ["derive"] }
+toml = { version = "1", optional = true }
+
+sqlx = { version = "0.9", default-features = false, features = [
+    "sqlite",
+    "runtime-tokio",
+    "macros",
+    "migrate",
+    "chrono",
+    "uuid",
+], optional = true }
+
+lettre = { version = "0.11", default-features = false, features = [
+    "smtp-transport",
+    "pool",
+    "hostname",
+    "builder",
+    "tokio1-rustls-tls",
+], optional = true }
+
+uuid = { version = "1", features = ["v4"], optional = true }
+chrono = { version = "0.4", optional = true }
+
+[features]
+hydrate = [
+    "leptos/hydrate",
+    "dep:console_error_panic_hook",
+    "dep:wasm-bindgen",
+]
+ssr = [
+    "dep:axum",
+    "dep:tokio",
+    "dep:leptos_axum",
+    "dep:toml",
+    "dep:sqlx",
+    "dep:lettre",
+    "dep:uuid",
+    "dep:chrono",
+    "leptos/ssr",
+    "leptos_meta/ssr",
+    "leptos_router/ssr",
+]
+
+# Defines a size-optimized profile for the WASM bundle in release mode
+[profile.wasm-release]
+inherits = "release"
+opt-level = 'z'
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[package.metadata.leptos]
+output-name = "atacc-inscription"
+site-root = "target/site"
+site-pkg-dir = "pkg"
+style-file = "style/main.css"
+assets-dir = "public"
+site-addr = "127.0.0.1:3000"
+reload-port = 3001
+browserquery = "defaults"
+env = "DEV"
+bin-features = ["ssr"]
+bin-default-features = false
+lib-features = ["hydrate"]
+lib-default-features = false
