@@ -18,21 +18,21 @@ pub async fn send_verification_email(
         token
     );
 
-    let body = format!(
-        "Salut {first_names},\n\n\
-         Merci de ton inscription à l'ATACC ! Pour confirmer ton adresse email, \
-         clique sur le lien ci-dessous :\n\n\
-         {verify_link}\n\n\
-         Si tu n'es pas à l'origine de cette inscription, tu peux ignorer ce message.\n\n\
-         À bientôt,\nL'équipe ATACC"
+    let html_body = format!(
+        "<p>Salut {first_names},</p>\
+         <p>Merci de ton inscription à l'ATACC ! Pour confirmer ton adresse email, clique sur le lien ci-dessous :</p>\
+         <p><a href=\"{verify_link}\">Confirmer mon inscription</a></p>\
+         <br>\
+         <p>Si tu n'es pas à l'origine de cette inscription, tu peux ignorer ce message.</p>\
+         <p>À bientôt,<br>L'équipe ATACC</p>"
     );
 
     let email = Message::builder()
         .from(smtp.from_address.parse()?)
         .to(to_email.parse()?)
         .subject("Confirme ton inscription à l'ATACC")
-        .header(ContentType::TEXT_PLAIN)
-        .body(body)?;
+        .header(ContentType::TEXT_HTML)
+        .body(html_body)?;
 
     let builder = match smtp.security {
         SmtpSecurity::None => {
