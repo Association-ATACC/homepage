@@ -31,7 +31,7 @@ fn creneaux_actuels() -> Vec<Creneau> {
             matiere: "Présentation de l'ATACC".to_owned(),
         },
         Creneau {
-            jour: "Vendredi",
+            jour: "Jeudi",
             debut: "14h00",
             fin: "18h00",
             matiere: "Permanance".to_owned(),
