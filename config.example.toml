@@ -1,0 +1,25 @@
+# Copie ce fichier vers `config.toml` puis adapte les valeurs à ton
+# environnement. `config.toml` ne doit jamais être commité (voir .gitignore) :
+# il contiendra un mot de passe SMTP en clair.
+
+[server]
+# URL publique du site, utilisée pour construire le lien de confirmation
+# envoyé par email. En dev, localhost suffit ; en prod, mets l'URL réelle,
+# par exemple "https://inscription.atacc.org".
+public_url = "http://127.0.0.1:3000"
+
+[database]
+# Chemin du fichier SQLite. Il est créé et migré automatiquement au
+# démarrage du serveur s'il n'existe pas encore.
+path = "atacc.db"
+
+[smtp]
+host = "smtp.example.org"
+port = 587
+username = "no-reply@atacc.org"
+password = "change-me"
+# Adresse (et nom affiché optionnel) utilisée comme expéditeur.
+from_address = "ATACC <no-reply@atacc.org>"
+# true pour STARTTLS (généralement port 587), false pour une connexion
+# chiffrée dès l'ouverture (généralement port 465).
+use_starttls = true

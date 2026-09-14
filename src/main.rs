@@ -1,9 +1,9 @@
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
-    use atacc_inscription::app::{shell, App};
-    use atacc_inscription::server::{config::AppConfig, db};
-    use atacc_inscription::state::AppState;
+    use atacc_homepage::app::{shell, App};
+    use atacc_homepage::server::{config::AppConfig, db};
+    use atacc_homepage::state::AppState;
     use axum::{routing::get, Router};
     use leptos::config::get_configuration;
     use leptos::prelude::*;
@@ -64,8 +64,8 @@ async fn main() {
 /// hydrated page just to read one query parameter and show a message.
 #[cfg(feature = "ssr")]
 mod verify {
-    use atacc_inscription::server::db;
-    use atacc_inscription::state::AppState;
+    use atacc_homepage::server::db;
+    use atacc_homepage::state::AppState;
     use axum::extract::{Query, State};
     use axum::response::Html;
     use serde::Deserialize;
@@ -119,7 +119,7 @@ mod verify {
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>{title} — ATACC</title>
-<link rel="stylesheet" href="/pkg/atacc-inscription.css"/>
+<link rel="stylesheet" href="/pkg/atacc_homepage.css"/>
 </head>
 <body>
 <main class="verify-page">

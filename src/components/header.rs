@@ -7,7 +7,9 @@ pub fn Header() -> impl IntoView {
             <div class="site-mark">
                 <img class="site-logo" src="/atacc_logo.svg" alt="" width="40" height="40" />
                 <span class="site-name">"ATACC"</span>
-                <a id="biblio" href="https://biblio.atacc.org">ATACCothèque</a>
+                <button id="biblio">
+                    <a href="https://biblio.atacc.org">ATACCothèque</a>
+                </button>
             </div>
             <div class="hero">
                 <h1>"Inscris-toi pour rester informé des événements de l'ATACC"</h1>

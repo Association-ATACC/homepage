@@ -33,7 +33,7 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
-        <Stylesheet id="leptos" href="/pkg/atacc-inscription.css"/>
+        <Stylesheet id="leptos" href="/pkg/atacc-homepage.css"/>
         <Title text="ATACC — Inscription"/>
         <Meta name="description" content="Inscris-toi à l'ATACC, l'association de tutorat et d'aide entre étudiants."/>
 

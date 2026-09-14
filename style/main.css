@@ -22,7 +22,7 @@
   --font-sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
 
   --content-width: 62rem;
-  --radius: 3px;
+  --radius: 12px;
 }
 
 * {
@@ -130,7 +130,19 @@ em {
   font-weight: 600;
   font-size: 1.05rem;
   letter-spacing: 0.02em;
-  text-decoration: none
+
+  background: var(--color-forest);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.65rem 1.3rem;
+  margin-top: 0.3rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+#biblio a {
+  color: #fdfcf8;
+  text-decoration: none;
 }
 
 /* ---------- Registration form ---------- */

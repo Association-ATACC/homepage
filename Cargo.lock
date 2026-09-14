@@ -73,7 +73,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "atacc-inscription"
+name = "atacc-homepage"
 version = "0.1.0"
 dependencies = [
  "axum",

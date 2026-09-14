@@ -23,12 +23,20 @@ const JOURS: [&str; 7] = [
 /// been scheduled yet — so this is a plain static list. Replace this with
 /// a database-backed lookup once slots exist.
 fn creneaux_actuels() -> Vec<Creneau> {
-    vec![Creneau {
-        jour: "Mardi",
-        debut: "11h15",
-        fin: "11h30",
-        matiere: "Présentation de l'ATACC".to_owned(),
-    }]
+    vec![
+        Creneau {
+            jour: "Mardi",
+            debut: "11h15",
+            fin: "11h30",
+            matiere: "Présentation de l'ATACC".to_owned(),
+        },
+        Creneau {
+            jour: "Vendredi",
+            debut: "14h00",
+            fin: "18h00",
+            matiere: "Permanance".to_owned(),
+        },
+    ]
 }
 
 #[component]

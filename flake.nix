@@ -45,7 +45,7 @@
           };
         in {
           default = rustPlatform.buildRustPackage rec {
-            pname = "atacc-inscription";
+            pname = "atacc-homepage";
             version = "0.1.0";
             src = ./.;
 
@@ -68,7 +68,7 @@
 
             buildPhase = ''
               runHook preBuild
-              cargo leptos build --release
+              cargo leptos build
               runHook postBuild
             '';
 
@@ -77,7 +77,7 @@
               
               mkdir -p $out/bin $out/share/${pname}
               
-              cp target/release/${pname} $out/bin/
+              cp target/debug/${pname} $out/bin/
               cp -r target/site $out/share/${pname}/
               
               runHook postInstall
