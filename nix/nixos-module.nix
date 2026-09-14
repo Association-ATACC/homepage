@@ -17,7 +17,7 @@ let
 
   smtpPasswordPlaceholder = "@smtp-password@";
 
-  configTemplate = pkgs.writeText "atacc-homepage-config.toml.template" ''
+configTemplate = pkgs.writeText "atacc-homepage-config.toml.template" ''
     [server]
     public_url = ${builtins.toJSON cfg.publicUrl}
 
@@ -28,9 +28,9 @@ let
     host = ${builtins.toJSON cfg.smtp.host}
     port = ${toString cfg.smtp.port}
     username = ${builtins.toJSON cfg.smtp.username}
-    password = "${smtpPasswordPlaceholder}"
+    ${lib.optionalString (cfg.smtp.passwordFile != null) "password = \"${smtpPasswordPlaceholder}\""}
     from_address = ${builtins.toJSON cfg.smtp.fromAddress}
-    use_starttls = ${lib.boolToString cfg.smtp.useStarttls}
+    security = ${builtins.toJSON cfg.smtp.security}
   '';
 in
 {
@@ -95,7 +95,7 @@ in
       };
 
       passwordFile = lib.mkOption {
-        type = lib.types.path;
+        type = lib.types.nullOr lib.types.path;
         example = "/run/secrets/atacc-smtp-password";
         description = ''
           Path to a file containing the SMTP password (plain text, no
@@ -115,13 +115,15 @@ in
         description = "From: address (and optional display name) used for outgoing emails.";
       };
 
-      useStarttls = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = ''
-          `true` for STARTTLS (generally port 587), `false` for a
-          connection that's encrypted from the start (generally port 465).
-        '';
+      security = lib.mkOption {
+        type = lib.types.enum [
+          "none"
+          "smtps"
+          "starttls"
+        ];
+        default = "starttls";
+        example = "none";
+        description = "Security protocol to use for the SMTP connection.";
       };
     };
   };
@@ -147,10 +149,12 @@ in
 
       preStart = ''
         ${pkgs.coreutils}/bin/install -m 0600 ${configTemplate} ${runtimeConfigPath}
-        ${lib.getExe pkgs.replace-secret} \
-          '${smtpPasswordPlaceholder}' \
-          "$CREDENTIALS_DIRECTORY/smtp-password" \
-          ${runtimeConfigPath}
+        ${lib.optionalString (cfg.smtp.passwordFile != null) ''
+          ${lib.getExe pkgs.replace-secret} \
+            '${smtpPasswordPlaceholder}' \
+            "$CREDENTIALS_DIRECTORY/smtp-password" \
+            ${runtimeConfigPath}
+        ''}
       '';
 
       serviceConfig = {
@@ -163,7 +167,7 @@ in
         RuntimeDirectory = runtimeDirectoryName;
         RuntimeDirectoryMode = "0700";
 
-        LoadCredential = [ "smtp-password:${cfg.smtp.passwordFile}" ];
+        LoadCredential = lib.optional (cfg.smtp.passwordFile != null) [ "smtp-password:${cfg.smtp.passwordFile}" ];
 
         NoNewPrivileges = true;
         ProtectSystem = "strict";

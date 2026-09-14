@@ -17,6 +17,15 @@ pub struct DatabaseSection {
     pub path: String,
 }
 
+#[derive(Clone, Deserialize, Default, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum SmtpSecurity {
+    None,
+    Smtps,
+    #[default]
+    Starttls,
+}
+
 /// SMTP connection details. Deliberately does not derive `Debug` so a
 /// stray `{:?}` never leaks the password into logs.
 #[derive(Clone, Deserialize)]
@@ -24,14 +33,10 @@ pub struct SmtpConfig {
     pub host: String,
     pub port: u16,
     pub username: String,
-    pub password: String,
+    pub password: Option<String>,
     pub from_address: String,
-    #[serde(default = "default_starttls")]
-    pub use_starttls: bool,
-}
-
-fn default_starttls() -> bool {
-    true
+    #[serde(default)]
+    pub security: SmtpSecurity,
 }
 
 impl AppConfig {

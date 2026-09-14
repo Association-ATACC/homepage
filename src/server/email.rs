@@ -2,7 +2,7 @@ use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
 
-use super::config::SmtpConfig;
+use super::config::{SmtpConfig, SmtpSecurity};
 
 /// Sends the "confirm your email" message for a pending registration.
 pub async fn send_verification_email(
@@ -34,18 +34,24 @@ pub async fn send_verification_email(
         .header(ContentType::TEXT_PLAIN)
         .body(body)?;
 
-    let creds = Credentials::new(smtp.username.clone(), smtp.password.clone());
+    let builder = match smtp.security {
+        SmtpSecurity::None => {
+            AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&smtp.host).port(smtp.port)
+        }
+        SmtpSecurity::Smtps => {
+            AsyncSmtpTransport::<Tokio1Executor>::relay(&smtp.host)?.port(smtp.port)
+        }
+        SmtpSecurity::Starttls => {
+            AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&smtp.host)?.port(smtp.port)
+        }
+    };
 
-    let mailer = if smtp.use_starttls {
-        AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&smtp.host)?
-            .port(smtp.port)
-            .credentials(creds)
-            .build()
-    } else {
-        AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&smtp.host)
-            .port(smtp.port)
-            .credentials(creds)
-            .build()
+    let mailer = match &smtp.password {
+        Some(pwd) => {
+            let creds = Credentials::new(smtp.username.clone(), pwd.to_owned());
+            builder.credentials(creds).build()
+        }
+        None => builder.build(),
     };
 
     mailer.send(email).await?;
