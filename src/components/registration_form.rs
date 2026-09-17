@@ -30,9 +30,14 @@ pub fn RegistrationForm() -> impl IntoView {
         let ph = phone.get_untracked();
         let num = student_number.get_untracked();
 
-        if first.trim().is_empty() || last.trim().is_empty() || mail.trim().is_empty() {
+        if first.trim().is_empty()
+            || last.trim().is_empty()
+            || mail.trim().is_empty()
+            || ph.trim().is_empty()
+            || num.trim().is_empty()
+        {
             status.set(FormStatus::Error(
-                "Merci de renseigner au moins ton prénom, ton nom et ton email.".to_string(),
+                "Merci de renseigner tous les champs.".to_string(),
             ));
             return;
         }
@@ -40,10 +45,7 @@ pub fn RegistrationForm() -> impl IntoView {
         status.set(FormStatus::Submitting);
 
         spawn_local(async move {
-            let phone_opt = (!ph.trim().is_empty()).then_some(ph);
-            let student_opt = (!num.trim().is_empty()).then_some(num);
-
-            match register_user(first, last, mail, phone_opt, student_opt).await {
+            match register_user(first, last, mail, ph, num).await {
                 Ok(RegistrationOutcome::EmailSent) => {
                     status.set(FormStatus::Success(
                         "Un email de confirmation vient de t'être envoyé. Vérifie ta boîte de réception (et tes spams) pour valider ton inscription.".to_string(),
@@ -103,7 +105,7 @@ pub fn RegistrationForm() -> impl IntoView {
 
                 <div class="field-row">
                     <label class="field">
-                        <span>"Téléphone " <em>"(optionnel)"</em></span>
+                        <span>"Téléphone"</span>
                         <input
                             type="tel"
                             autocomplete="tel"
@@ -112,7 +114,7 @@ pub fn RegistrationForm() -> impl IntoView {
                         />
                     </label>
                     <label class="field">
-                        <span>"Numéro étudiant " <em>"(optionnel)"</em></span>
+                        <span>"Numéro étudiant"</span>
                         <input
                             type="text"
                             prop:value=move || student_number.get()

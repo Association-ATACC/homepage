@@ -9,7 +9,7 @@ async fn main() {
     use leptos::prelude::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
 
-    let config_path = std::env::var("ATACC_CONFIG").unwrap_or_else(|_| "config.toml".to_string());
+    let config_path = std::env::var("ATACC_CONFIG").unwrap_or_else(|_| "config.toml".to_owned());
     let app_config = AppConfig::load(&config_path).unwrap_or_else(|e| {
         eprintln!("Impossible de charger la configuration ({config_path}) : {e}");
         eprintln!("Copie config.example.toml vers config.toml et adapte-le avant de relancer.");

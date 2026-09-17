@@ -45,8 +45,8 @@ pub async fn upsert_pending_registration(
     first_names: &str,
     last_names: &str,
     email: &str,
-    phone: Option<&str>,
-    student_number: Option<&str>,
+    phone: &str,
+    student_number: &str,
 ) -> Result<PendingRegistration, sqlx::Error> {
     let existing: Option<ExistingUserRow> =
         sqlx::query_as("SELECT id, verified FROM users WHERE email = ?1")

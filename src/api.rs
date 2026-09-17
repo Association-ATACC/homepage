@@ -20,11 +20,11 @@ pub async fn register_user(
     first_names: String,
     last_names: String,
     email: String,
-    phone: Option<String>,
-    student_number: Option<String>,
+    phone: String,
+    student_number: String,
 ) -> Result<RegistrationOutcome, ServerFnError> {
     use regex::Regex;
-    use std::sync::LazyLock;
+    use std::{borrow::Cow, sync::LazyLock};
 
     use crate::server::db;
     use crate::server::email::send_verification_email;
@@ -42,12 +42,11 @@ pub async fn register_user(
     static INTL_PHONE_REGEX: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"^\+\d{9,15}$").unwrap());
 
-    let first_names = first_names.trim().to_string();
-    let last_names = last_names.trim().to_string();
-    let email = email.trim().to_lowercase();
-    let student_number = student_number
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty());
+    let first_names = first_names.trim();
+    let last_names = last_names.trim();
+    let email = email.trim();
+    let phone = phone.replace([' ', '.', '-'], "");
+    let student_number = student_number.trim();
 
     if first_names.is_empty() || last_names.is_empty() {
         return Err(ServerFnError::new(
@@ -55,54 +54,42 @@ pub async fn register_user(
         ));
     }
 
-    if !EMAIL_REGEX.is_match(&email) {
+    if !EMAIL_REGEX.is_match(email) {
         return Err(ServerFnError::new(
             "Cette adresse email ne semble pas valide.",
         ));
     }
 
-    if let Some(ref num) = student_number {
-        if !STUDENT_NUM_REGEX.is_match(num) {
-            return Err(ServerFnError::new(
-                "Le numéro étudiant doit comporter exactement 8 chiffres.",
-            ));
-        }
+    if !STUDENT_NUM_REGEX.is_match(student_number) {
+        return Err(ServerFnError::new(
+            "Le numéro étudiant doit comporter exactement 8 chiffres.",
+        ));
     }
 
-    let phone = match phone
-        .map(|p| p.replace([' ', '.', '-'], "").trim().to_string())
-        .filter(|p| !p.is_empty())
-    {
-        Some(p) if LOCAL_PHONE_REGEX.is_match(&p) => {
-            // Drop the leading '0' and prepend '+33'
-            Some(format!("+33{}", &p[1..]))
-        }
-        Some(p) if INTL_PHONE_REGEX.is_match(&p) => {
-            // Keep the +XX international number as is
-            Some(p)
-        }
-        Some(_) => {
+    let phone = match phone.trim() {
+        p if LOCAL_PHONE_REGEX.is_match(p) => Cow::Owned(format!("+33{}", &p[1..])),
+        p if INTL_PHONE_REGEX.is_match(p) => Cow::Borrowed(p),
+        _ => {
             return Err(ServerFnError::new(
                 "Le format du numéro de téléphone est invalide (attendu: 06... ou +33...).",
             ));
         }
-        None => None,
     };
 
     let pending = db::upsert_pending_registration(
         &state.pool,
-        &first_names,
-        &last_names,
-        &email,
-        phone.as_deref(),
-        student_number.as_deref(),
+        first_names,
+        last_names,
+        email,
+        &phone,
+        student_number,
     )
     .await
     .map_err(|e| ServerFnError::new(format!("Erreur base de données : {e}")))?;
 
     match pending {
         db::PendingRegistration::New { token } | db::PendingRegistration::Resent { token } => {
-            send_verification_email(&state.smtp, &state.public_url, &email, &first_names, &token)
+            send_verification_email(&state.smtp, &state.public_url, email, first_names, &token)
                 .await
                 .map_err(|e| ServerFnError::new(format!("Erreur d'envoi d'email : {e}")))?;
             Ok(RegistrationOutcome::EmailSent)

@@ -46,7 +46,7 @@ rustPlatform.buildRustPackage rec {
 
   buildPhase = ''
     runHook preBuild
-    cargo leptos build
+    cargo leptos build --release
     runHook postBuild
   '';
 
@@ -55,7 +55,7 @@ rustPlatform.buildRustPackage rec {
 
     mkdir -p $out/bin $out/share/${pname}
 
-    cp target/debug/${pname} $out/bin/
+    cp target/release/${pname} $out/bin/
     cp -r target/site $out/share/${pname}/
 
     runHook postInstall
