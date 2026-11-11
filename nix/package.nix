@@ -3,6 +3,7 @@
   lib,
   rustPlatform,
   pkg-config,
+  sqlite,
   cargo-leptos,
   binaryen,
   wasm-bindgen-cli_0_2_127,
@@ -42,7 +43,9 @@ rustPlatform.buildRustPackage rec {
     lld
   ];
 
-  buildInputs = [ ];
+  buildInputs = [
+    sqlite
+  ];
 
   buildPhase = ''
     runHook preBuild
