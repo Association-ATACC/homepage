@@ -1,67 +1,30 @@
 [package]
 name = "atacc-homepage"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+authors = [ "c2fc2f <contact@c2fc2f.com>" ]
+description = "Registration website for ATACC, a tutoring and support association, built with Leptos (SSR + hydration) and Axum."
+readme = "README.md"
+repository = "https://github.com/Association-ATACC/homepage"
+license = "MIT"
+keywords = [
+  "leptos",
+  "axum",
+  "registration",
+  "tutoring",
+  "wasm",
+]
+categories = [
+  "web-programming",
+  "wasm",
+]
 
 [lib]
-crate-type = ["cdylib", "rlib"]
-
-[dependencies]
-leptos = { version = "0.8" }
-leptos_router = { version = "0.8" }
-leptos_meta = { version = "0.8" }
-
-axum = { version = "0.8", features = ["macros"], optional = true }
-leptos_axum = { version = "0.8", optional = true }
-tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
-console_error_panic_hook = { version = "0.1", optional = true }
-wasm-bindgen = { version = "=0.2.127", optional = true }
-
-serde = { version = "1", features = ["derive"] }
-toml = { version = "1", optional = true }
-
-sqlx = { version = "0.9", default-features = false, features = [
-    "sqlite",
-    "runtime-tokio",
-    "macros",
-    "migrate",
-    "chrono",
-    "uuid",
-], optional = true }
-
-lettre = { version = "0.11", default-features = false, features = [
-    "smtp-transport",
-    "pool",
-    "hostname",
-    "builder",
-    "tokio1-rustls-tls",
-], optional = true }
-
-uuid = { version = "1", features = ["v4"], optional = true }
-chrono = { version = "0.4", optional = true }
-regex = "1"
-
-[features]
-hydrate = [
-    "leptos/hydrate",
-    "dep:console_error_panic_hook",
-    "dep:wasm-bindgen",
-]
-ssr = [
-    "dep:axum",
-    "dep:tokio",
-    "dep:leptos_axum",
-    "dep:toml",
-    "dep:sqlx",
-    "dep:lettre",
-    "dep:uuid",
-    "dep:chrono",
-    "leptos/ssr",
-    "leptos_meta/ssr",
-    "leptos_router/ssr",
+crate-type = [
+  "cdylib",
+  "rlib",
 ]
 
-# Defines a size-optimized profile for the WASM bundle in release mode
 [profile.wasm-release]
 inherits = "release"
 opt-level = 'z'
@@ -69,7 +32,83 @@ lto = true
 codegen-units = 1
 panic = "abort"
 
+[lints.rust]
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+
+std_instead_of_core = "warn"
+alloc_instead_of_core = "warn"
+string_add = "warn"
+string_add_assign = "warn"
+multiple_crate_versions = "allow"
+
+doc_paragraphs_missing_punctuation = "warn"
+missing_docs_in_private_items = "warn"
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+
+[dependencies]
+leptos = { version = "0.8" }
+leptos_router = { version = "0.8" }
+leptos_meta = { version = "0.8" }
+
+axum = { version = "0.8", features = [ "macros" ], optional = true }
+leptos_axum = { version = "0.8", optional = true }
+tokio = { version = "1", features = [ "rt-multi-thread" ], optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
+wasm-bindgen = { version = "=0.2.130", optional = true }
+
+serde = { version = "1", features = [ "derive" ] }
+toml = { version = "1", optional = true }
+
+sqlx = { version = "0.9", default-features = false, features = [
+  "sqlite",
+  "runtime-tokio",
+  "macros",
+  "migrate",
+  "chrono",
+  "uuid",
+], optional = true }
+
+lettre = { version = "0.11", default-features = false, features = [
+  "smtp-transport",
+  "pool",
+  "hostname",
+  "builder",
+  "tokio1-rustls-tls",
+], optional = true }
+
+uuid = { version = "1", features = [ "v4" ], optional = true }
+chrono = { version = "0.4", optional = true }
+regex = "1"
+
+[features]
+hydrate = [
+  "leptos/hydrate",
+  "dep:console_error_panic_hook",
+  "dep:wasm-bindgen",
+]
+ssr = [
+  "dep:axum",
+  "dep:tokio",
+  "dep:leptos_axum",
+  "dep:toml",
+  "dep:sqlx",
+  "dep:lettre",
+  "dep:uuid",
+  "dep:chrono",
+  "leptos/ssr",
+  "leptos_meta/ssr",
+  "leptos_router/ssr",
+]
+
 [package.metadata.leptos]
+lib-profile-release = "wasm-release"
 output-name = "atacc-homepage"
 site-root = "target/site"
 site-pkg-dir = "pkg"
@@ -79,7 +118,7 @@ site-addr = "127.0.0.1:3000"
 reload-port = 3001
 browserquery = "defaults"
 env = "DEV"
-bin-features = ["ssr"]
+bin-features = [ "ssr" ]
 bin-default-features = false
-lib-features = ["hydrate"]
+lib-features = [ "hydrate" ]
 lib-default-features = false

@@ -1,3 +1,6 @@
+//! Building blocks of the home page: the header, the registration form and the
+//! weekly schedule.
+
 mod header;
 mod registration_form;
 mod weekly_schedule;

@@ -2,17 +2,19 @@
   version,
   lib,
   rustPlatform,
-  pkg-config,
-  sqlite,
+  wasm-bindgen-cli_0_2_130,
   cargo-leptos,
   binaryen,
-  wasm-bindgen-cli_0_2_127,
-  lld,
+  rustc,
+  makeWrapper,
+  pkg-config,
+  sqlite,
   buildFeatures ? [ ],
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "atacc-homepage";
+  inherit version;
 
   src = lib.fileset.toSource {
     root = ../.;
@@ -28,28 +30,27 @@ rustPlatform.buildRustPackage rec {
   };
 
   inherit buildFeatures;
-  inherit version;
 
-  # inject version from nix into the build
   env.NIX_RELEASE_VERSION = version;
 
   cargoLock.lockFile = ../Cargo.lock;
 
   nativeBuildInputs = [
-    pkg-config
+    wasm-bindgen-cli_0_2_130
     cargo-leptos
     binaryen
-    wasm-bindgen-cli_0_2_127
-    lld
+    rustc.llvmPackages.lld
+    makeWrapper
+    pkg-config
   ];
 
-  buildInputs = [
-    sqlite
-  ];
+  buildInputs = [ sqlite ];
 
   buildPhase = ''
     runHook preBuild
+
     cargo leptos build --release
+
     runHook postBuild
   '';
 
@@ -57,16 +58,16 @@ rustPlatform.buildRustPackage rec {
     runHook preInstall
 
     mkdir -p $out/bin $out/share/${pname}
-
-    cp target/release/${pname} $out/bin/
-    cp -r target/site $out/share/${pname}/
+    cp target/release/${meta.mainProgram} $out/bin
+    cp -r target/site $out/share/${pname}
+    wrapProgram $out/bin/${meta.mainProgram} \
+      --set LEPTOS_SITE_ROOT $out/share/${pname}/site
 
     runHook postInstall
   '';
 
-  doCheck = false;
-
   meta = with lib; {
+    description = "Registration website for ATACC, a tutoring and support association, built with Leptos (SSR + hydration) and Axum.";
     mainProgram = "atacc-homepage";
     homepage = "https://github.com/Association-ATACC/homepage";
     license = licenses.mit;

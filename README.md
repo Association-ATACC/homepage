@@ -1,113 +1,248 @@
-# ATACC — site d'inscription
+# atacc-homepage
 
-Site d'inscription à l'ATACC (Association de Tutorat et d'Aide), en Rust
-avec [Leptos](https://leptos.dev) (SSR + hydration) et
-[Axum](https://github.com/tokio-rs/axum).
+The registration website of ATACC, a student tutoring and support association,
+written in Rust with [Leptos](https://leptos.dev) (server-side rendering plus
+WebAssembly hydration) on top of [Axum](https://github.com/tokio-rs/axum).
+Visitors sign up for event notifications through a short form, receive a
+confirmation email over SMTP, and validate their address by following the link
+it contains. Registrations are stored in a local SQLite database that is
+created and migrated automatically on startup.
 
-- Formulaire d'inscription (prénom·s, nom·s, email, téléphone optionnel,
-  numéro étudiant optionnel) avec envoi d'un email de vérification via
-  SMTP, configuré dans `config.toml`.
-- Emploi du temps hebdomadaire : vide pour l'instant (voir
-  `src/components/weekly_schedule.rs`), affiché statiquement mais écrit
-  pour être facilement branché sur la base de données plus tard.
+The user interface and every message shown to visitors are in French.
 
-## Démarrage rapide (NixOS)
+## Overview
 
-```console
-$ nix develop
-$ cp config.example.toml config.toml
-$ $EDITOR config.toml   # renseigne au moins les identifiants SMTP
-$ cargo leptos watch
+The site serves two pages:
+
+- `/`: the registration form, followed by the weekly schedule of tutoring
+  slots.
+- `/verify?token=...`: the target of the link sent by email, which confirms
+  the address.
+
+When the form is submitted, the server validates the input, stores a pending
+registration and emails a confirmation link built from `public_url`. Following
+that link marks the registration as verified.
+
+Registering again with an address that is still unverified updates the stored
+details, issues a new token (the previous link stops working) and resends the
+email. Registering with an address that is already verified changes nothing
+and tells the visitor so.
+
+## Installation
+
+### From source
+
+Building requires a stable Rust toolchain with the `wasm32-unknown-unknown`
+target, [`cargo-leptos`](https://github.com/leptos-rs/cargo-leptos) and a
+`wasm-bindgen-cli` matching the `wasm-bindgen` version pinned in `Cargo.toml`.
+
+```bash
+git clone https://github.com/Association-ATACC/homepage
+cd homepage
+cargo leptos build --release
 ```
 
-Le site tourne alors sur <http://127.0.0.1:3000> avec rechargement à
-chaud. Le fichier `flake.nix` fournit un Rust stable récent (>= 1.88,
-requis par Leptos 0.8) avec la cible `wasm32-unknown-unknown`, ainsi que
-`cargo-leptos`. Si `cargo-leptos` n'est pas disponible dans ton canal
-nixpkgs, installe-le dans le dev shell avec :
+This produces the server binary at `target/release/atacc-homepage` and the
+static site (WebAssembly bundle, JavaScript glue, CSS, and the contents of
+`public/`) under `target/site/`.
 
-```console
-$ cargo install cargo-leptos --locked
+### With Nix
+
+A Nix flake is provided:
+
+```bash
+nix run github:Association-ATACC/homepage
+# or
+nix build
+# or, to enter a development shell:
+nix develop
 ```
 
-Sans Nix, il faut : Rust stable ≥ 1.88 + la cible `wasm32-unknown-unknown`
-(`rustup target add wasm32-unknown-unknown`), et `cargo-leptos`
-(`cargo install cargo-leptos --locked`).
+The package wraps the binary so that `LEPTOS_SITE_ROOT` points to the built
+site inside the Nix store. The flake also exposes a NixOS module, see
+[Deployment on NixOS](#deployment-on-nixos).
 
-## Base de données
+## Usage
 
-SQLite, via `sqlx`. Le fichier indiqué par `[database].path` dans
-`config.toml` (`atacc.db` par défaut) est créé et migré automatiquement au
-démarrage — aucune commande à lancer à la main. Le schéma vit dans
-`migrations/`.
+### Development
 
-## Ce qui manque encore
+```bash
+nix develop
+cp config.example.toml config.toml
+$EDITOR config.toml   # at least the SMTP settings
+cargo leptos watch
+```
 
-- **Le logo** : voir `public/README.md`. Le header pointe vers
-  `/atacc_logo.svg`, à déposer dans `public/`.
-- **Les créneaux de tutorat** : `weekly_schedule.rs` est volontairement
-  statique/vide (c'est ce qui a été demandé). Le composant est structuré
-  pour qu'il suffise de remplacer le corps de `creneaux_actuels()` par un
-  appel à une fonction serveur qui lit la base, sans toucher au reste du
-  composant.
-- **Déploiement** : le document fourni mentionne un déplacement du site
-  courant vers `annal.atacc.org` — ce dépôt ne présume rien sur le nom de
-  domaine final, `public_url` dans `config.toml` est le seul endroit à
-  ajuster (c'est la valeur utilisée dans le lien envoyé par email).
+The site is then available at <http://127.0.0.1:3000>, with live reload.
 
-## Pépins déjà rencontrés (et corrigés)
+### Production
 
-- **`lettre` refusait de compiler** avec l'erreur *"built with the `tokio1`
-  and the `native-tls` features, but `tokio1-native-tls` hasn't been turned
-  on"* : `lettre` active `native-tls` par défaut, ce qui entrait en
-  conflit avec `tokio1-rustls-tls`. Corrigé en passant
-  `default-features = false` sur `lettre` dans `Cargo.toml`.
-- **`wasm-bindgen is required but was not found`** au moment du
-  `cargo leptos watch` : il manque l'outil `wasm-bindgen-cli` (distinct de
-  la crate `wasm-bindgen`), et sa version doit correspondre **exactement**
-  à celle résolue dans `Cargo.lock` pour la crate `wasm-bindgen`
-  (`wasm-bindgen` ne suit pas semver — même un écart de patch casse le
-  build). J'ai d'abord tenté un `pkgs.wasm-bindgen-cli.override { version
-  = ...; }` dans `flake.nix`, mais nixpkgs a restructuré ce paquet en
-  dérivations par version figées (`wasm-bindgen-cli_0_2_127`, etc.) qui
-  n'acceptent plus cet override — je l'ai retiré. La solution qui marche
-  dans tous les cas, à lancer dans le dev shell :
+On NixOS, use the [module](#deployment-on-nixos). Otherwise, build the site as
+described in [From source](#from-source), then start the binary with the same
+environment the module sets:
 
-  ```console
-  $ grep -A1 'name = "wasm-bindgen"' Cargo.lock   # trouve la version exacte
-  $ cargo install wasm-bindgen-cli --version <cette-version> --locked
-  ```
+```bash
+ATACC_CONFIG=/etc/atacc/config.toml \
+LEPTOS_SITE_ROOT=target/site \
+LEPTOS_SITE_ADDR=127.0.0.1:3000 \
+LEPTOS_ENV=PROD \
+target/release/atacc-homepage
+```
 
-## Notes techniques / choix faits
+The server speaks plain HTTP and is meant to sit behind a reverse proxy that
+terminates TLS. If the configuration file cannot be read or parsed, it prints
+the error and exits with status 1.
 
-Ce projet a été généré début septembre 2026. Les APIs de Leptos ont
-beaucoup bougé entre les versions 0.6/0.7/0.8 (renderer "tachys", signaux,
-imports...) ; ce code a été écrit et vérifié contre la documentation et
-les templates officiels **actuels** (`leptos-rs/start-axum`, Leptos
-0.8.x, Axum 0.8.x) plutôt que contre des exemples plus anciens qui
-traînent sur le web. Quelques choix à connaître :
+## Configuration
 
-- **`sqlx` est épinglé sur la branche `0.7`** (`version = "0.7"` dans
-  `Cargo.toml`) alors que `0.9` est sorti entre-temps. Je n'ai pas pu
-  compiler ce projet dans mon environnement d'exécution (pas de
-  toolchain Rust assez récent) pour vérifier une mise à jour vers 0.9 ;
-  0.7 est une API que je connais avec confiance. Tu peux tenter de
-  bumper la version toi-même (`cargo update -p sqlx`), en gardant un œil
-  sur le changelog de sqlx.
-- Les requêtes utilisent l'API **runtime** de sqlx (`sqlx::query`,
-  `sqlx::query_as` + `#[derive(FromRow)]`) plutôt que les macros
-  `query!`/`query_as!`, qui exigeraient une base de données déjà
-  initialisée (ou un cache `.sqlx`) au moment de la compilation. Ça
-  évite un piège classique de mise en route.
-- Pas de feature `nightly` de Leptos : les signaux s'utilisent avec
-  `.get()`/`.set()` plutôt que la syntaxe d'appel `signal()`. Ça reste
-  du Rust stable, plus simple à outiller avec Nix.
-- SMTP et la connexion sqlx utilisent toutes les deux **rustls** (pas
-  OpenSSL natif), donc pas de dépendance système à `openssl-dev` a
-  priori — `flake.nix` l'inclut quand même par précaution.
-- **Je n'ai pas pu compiler ce code** dans le bac à sable où il a été
-  généré (pas de toolchain Rust ≥ 1.88 disponible). J'ai vérifié chaque
-  bout d'API contre la doc/les sources officielles à jour plutôt que de
-  me fier à ma mémoire, mais il est possible qu'il reste une erreur de
-  compilation mineure (import manquant, typo) à corriger au premier
-  `cargo leptos watch`. Dis-moi ce que le compilateur renvoie si besoin.
+Copy [`config.example.toml`](config.example.toml) to `config.toml` and adjust
+it. The file contains an SMTP password in clear text and must **never** be
+committed.
+
+| Section      | Field          | Description                                                                                   | Default      |
+| ------------ | -------------- | --------------------------------------------------------------------------------------------- | ------------ |
+| `[server]`   | `public_url`   | Public base URL of the site, used to build the link sent by email (a trailing `/` is ignored) | *(required)* |
+| `[database]` | `path`         | Path of the SQLite file, created and migrated on startup                                      | *(required)* |
+| `[smtp]`     | `host`         | SMTP server hostname                                                                          | *(required)* |
+| `[smtp]`     | `port`         | SMTP server port                                                                              | *(required)* |
+| `[smtp]`     | `username`     | SMTP username                                                                                 | *(required)* |
+| `[smtp]`     | `password`     | SMTP password; when omitted, the server is contacted without authentication                   | *(none)*     |
+| `[smtp]`     | `from_address` | Sender of the emails, with an optional display name (`ATACC <no-reply@atacc.org>`)            | *(required)* |
+| `[smtp]`     | `security`     | Transport security, see below                                                                 | `starttls`   |
+
+`public_url` is the only place to change when the site moves to another
+domain.
+
+### SMTP security
+
+| Value      | Behavior                                                 | Typical port |
+| ---------- | -------------------------------------------------------- | ------------ |
+| `starttls` | Plain connection upgraded to TLS with `STARTTLS`         | `587`        |
+| `smtps`    | Implicit TLS, the connection is encrypted from the start | `465`        |
+| `none`     | No encryption, only suitable for local or trusted relays | `25`, `1025` |
+
+TLS is handled by `rustls`: no system OpenSSL is required.
+
+### Environment variables
+
+| Variable           | Description                         | Default          |
+| ------------------ | ----------------------------------- | ---------------- |
+| `ATACC_CONFIG`     | Path of the TOML configuration file | `config.toml`    |
+| `LEPTOS_SITE_ADDR` | Address the server binds to         | `127.0.0.1:3000` |
+| `LEPTOS_SITE_ROOT` | Directory holding the built site    | `target/site`    |
+| `LEPTOS_ENV`       | `DEV` or `PROD`                     | `DEV`            |
+
+## Deployment on NixOS
+
+The flake exports a NixOS module, `nixosModules.default`, that runs the site
+as a hardened systemd service.
+
+```nix
+{
+  inputs.atacc-homepage.url = "github:Association-ATACC/homepage";
+
+  outputs =
+    { nixpkgs, atacc-homepage, ... }:
+    {
+      nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          atacc-homepage.nixosModules.default
+          {
+            services.atacc-homepage = {
+              enable = true;
+              publicUrl = "https://inscription.atacc.org";
+              smtp = {
+                host = "smtp.example.org";
+                username = "no-reply@atacc.org";
+                passwordFile = "/run/secrets/atacc-smtp-password";
+                fromAddress = "ATACC <no-reply@atacc.org>";
+              };
+            };
+
+            # TLS termination in front of the service
+            services.nginx.virtualHosts."inscription.atacc.org" = {
+              enableACME = true;
+              forceSSL = true;
+              locations."/".proxyPass = "http://127.0.0.1:3000";
+            };
+          }
+        ];
+      };
+    };
+}
+```
+
+### Options
+
+| Option              | Type         | Description                                                     | Default           |
+| ------------------- | ------------ | --------------------------------------------------------------- | ----------------- |
+| `enable`            | bool         | Enable the service                                              | `false`           |
+| `package`           | package      | Server binary and built site                                    | flake's `default` |
+| `host`              | string       | Address the server binds to                                     | `127.0.0.1`       |
+| `port`              | port         | Port the server listens on                                      | `3000`            |
+| `openFirewall`      | bool         | Open `port` in the firewall                                     | `false`           |
+| `publicUrl`         | string       | Public URL of the site, without trailing slash                  | *(required)*      |
+| `smtp.host`         | string       | SMTP server hostname                                            | *(required)*      |
+| `smtp.port`         | port         | SMTP server port                                                | `587`             |
+| `smtp.username`     | string       | SMTP username                                                   | *(required)*      |
+| `smtp.passwordFile` | null or path | File containing the SMTP password, `null` for no authentication | *(required)*      |
+| `smtp.fromAddress`  | string       | `From:` address of the emails                                   | *(required)*      |
+| `smtp.security`     | enum         | `none`, `smtps` or `starttls`                                   | `starttls`        |
+
+- Give `passwordFile` as a **string** (for example a path managed by agenix or
+  sops-nix), not as a Nix path literal, which would copy the secret into the
+  world-readable Nix store. The password is only read at service start.
+- The database lives at `/var/lib/atacc-homepage/atacc.db`: that is the file
+  to back up.
+
+## Implementation Notes
+
+### Input validation
+
+Validation runs on the server, in `src/pages/home/logic.rs`. The form also
+refuses to submit while a field is empty, so every field is required.
+
+| Field          | Rule                                                                  |
+| -------------- | --------------------------------------------------------------------- |
+| Names          | Non-empty after trimming                                              |
+| Email          | Must look like `local@domain.tld`                                     |
+| Student number | Exactly 8 digits                                                      |
+| Phone          | French local (`0` + 9 digits) or international (`+` + 9 to 15 digits) |
+
+Spaces, dots and dashes are removed from the phone number, and a French local
+number such as `06 12 34 56 78` is stored as `+33612345678`.
+
+### Data model
+
+A single table, defined in
+[`migrations/0001_init.sql`](migrations/0001_init.sql):
+
+| Column               | Description                                           |
+| -------------------- | ----------------------------------------------------- |
+| `id`                 | UUID v4, primary key                                  |
+| `first_names`        | First name(s)                                         |
+| `last_names`         | Last name(s)                                          |
+| `email`              | Email address, unique                                 |
+| `phone`              | Phone number, normalized to international format      |
+| `student_number`     | Student number                                        |
+| `verification_token` | UUID v4 sent in the confirmation link (indexed)       |
+| `verified`           | `0` until the link is followed, then `1`              |
+| `created_at`         | RFC 3339 timestamp of the first registration          |
+| `verified_at`        | RFC 3339 timestamp of the confirmation, `NULL` before |
+
+Queries use SQLx's runtime API (`query`, `query_as`), so no database or
+offline query cache is needed to compile the project. Migrations are embedded
+in the binary and applied at startup.
+
+### Weekly schedule
+
+The schedule is currently static: `current_slots()` in
+[`src/pages/home/components/weekly_schedule.rs`](src/pages/home/components/weekly_schedule.rs)
+returns a hard-coded vector of `Slot` values (day, start, end, subject). Edit
+it and rebuild to change the schedule. When the list is empty, the page shows
+an explanatory message instead of the grid.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

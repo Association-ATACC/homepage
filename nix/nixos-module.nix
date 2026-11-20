@@ -17,7 +17,7 @@ let
 
   smtpPasswordPlaceholder = "@smtp-password@";
 
-configTemplate = pkgs.writeText "atacc-homepage-config.toml.template" ''
+  configTemplate = pkgs.writeText "atacc-homepage-config.toml.template" ''
     [server]
     public_url = ${builtins.toJSON cfg.publicUrl}
 
@@ -28,7 +28,9 @@ configTemplate = pkgs.writeText "atacc-homepage-config.toml.template" ''
     host = ${builtins.toJSON cfg.smtp.host}
     port = ${toString cfg.smtp.port}
     username = ${builtins.toJSON cfg.smtp.username}
-    ${lib.optionalString (cfg.smtp.passwordFile != null) "password = \"${smtpPasswordPlaceholder}\""}
+    ${lib.optionalString (
+      cfg.smtp.passwordFile != null
+    ) "password = \"${smtpPasswordPlaceholder}\""}
     from_address = ${builtins.toJSON cfg.smtp.fromAddress}
     security = ${builtins.toJSON cfg.smtp.security}
   '';
@@ -129,10 +131,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [ cfg.port ];
+    networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [
+      cfg.port
+    ];
 
     systemd.services.atacc-homepage = {
       description = "ATACC registration website";
+
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
       wantedBy = [ "multi-user.target" ];
@@ -140,9 +145,6 @@ in
       environment = {
         ATACC_CONFIG = runtimeConfigPath;
 
-        LEPTOS_OUTPUT_NAME = "atacc-homepage";
-        LEPTOS_SITE_ROOT = "${cfg.package}/share/atacc-homepage/site";
-        LEPTOS_SITE_PKG_DIR = "pkg";
         LEPTOS_SITE_ADDR = "${cfg.host}:${toString cfg.port}";
         LEPTOS_ENV = "PROD";
       };
@@ -167,7 +169,9 @@ in
         RuntimeDirectory = runtimeDirectoryName;
         RuntimeDirectoryMode = "0700";
 
-        LoadCredential = lib.optional (cfg.smtp.passwordFile != null) [ "smtp-password:${cfg.smtp.passwordFile}" ];
+        LoadCredential = lib.optional (cfg.smtp.passwordFile != null) [
+          "smtp-password:${cfg.smtp.passwordFile}"
+        ];
 
         NoNewPrivileges = true;
         ProtectSystem = "strict";

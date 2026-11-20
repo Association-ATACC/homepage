@@ -1,6 +1,8 @@
 debug
 target
 
+result
+
 config.toml
 *.db
 *.db-journal
